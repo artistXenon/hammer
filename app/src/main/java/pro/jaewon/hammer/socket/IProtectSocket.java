@@ -4,7 +4,7 @@ import java.net.DatagramSocket;
 import java.net.Socket;
 
 public interface IProtectSocket {
-	void protectSocket(Socket socket);
-	void protectSocket(int socket);
-	void protectSocket(DatagramSocket socket);
+	boolean protect(Socket socket);
+	boolean protect(int socket);
+	boolean protect(DatagramSocket socket);
 }

@@ -1,4 +1,4 @@
-# Dawn
+# Hammer
 DPI evader for Android
 
 # 개인정보처리방침

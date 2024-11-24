@@ -60,59 +60,54 @@ public class SocketNIODataService implements Runnable {
 	private void runTask(){
 		Log.d(TAG, "Selector is running...");
 		
-		while(!shutdown){
+		while (!shutdown) {
 			try {
-				synchronized(syncSelector){
+				synchronized (syncSelector) {
 					selector.select();
 				}
 			} catch (IOException e) {
 				Log.e(TAG,"Error in Selector.select(): " + e.getMessage());
-				try {
-					Thread.sleep(100);
-				} catch (InterruptedException ex) {
-					Log.e(TAG, e.toString());
-				}
+				try { Thread.sleep(100); }
+				catch (InterruptedException ignore) {}
 				continue;
 			}
 
-			if(shutdown){
-				break;
-			}
-			synchronized(syncSelector2){
+			if (shutdown) break;
+
+			synchronized (syncSelector2) {
 				Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
-				while(iterator.hasNext()){
+				while (iterator.hasNext()) {
 					SelectionKey key = iterator.next();
-					SelectableChannel selectableChannel = key.channel();
-					if(selectableChannel instanceof SocketChannel) {
-						try {
-							processTCPSelectionKey(key);
-						} catch (IOException e) {
-							key.cancel();
-						}
-					} else if (selectableChannel instanceof DatagramChannel) {
-						processUDPSelectionKey(key);
+                    try (SelectableChannel selectableChannel = key.channel()) {
+                        if (selectableChannel instanceof SocketChannel) {
+                            try { processTCPSelectionKey(key); }
+							catch (IOException e) { key.cancel(); }
+                        } else if (selectableChannel instanceof DatagramChannel) {
+                            processUDPSelectionKey(key);
+                        }
+                    } catch (IOException e) {
+						Log.e(TAG, "#runTask$SelectableChannel: " + e.getMessage());
 					}
-					iterator.remove();
-					if(shutdown){
-						break;
-					}
+                    iterator.remove();
+					if (shutdown) break;
 				}
 			}
 		}
 	}
 
 	private void processUDPSelectionKey(SelectionKey key){
-		if(!key.isValid()){
+		if (!key.isValid()) {
 			Log.d(TAG,"Invalid SelectionKey for UDP");
 			return;
 		}
+
 		DatagramChannel channel = (DatagramChannel) key.channel();
 		Session session = SessionManager.INSTANCE.getSessionByChannel(channel);
-		if(session == null){
+		if (session == null) {
 			return;
 		}
 		
-		if(!session.isConnected() && key.isConnectable()){
+		if (!session.isConnected() && key.isConnectable()) {
 			String ips = PacketUtil.intToIPAddress(session.getDestIp());
 			int port = session.getDestPort();
 			SocketAddress address = new InetSocketAddress(ips,port);
@@ -121,83 +116,76 @@ public class SocketNIODataService implements Runnable {
 				channel = channel.connect(address);
 				session.setChannel(channel);
 				session.setConnected(channel.isConnected());
-			}catch (Exception e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 				session.setAbortingConnection(true);
 			}
 		}
-		if(channel.isConnected()){
+		if (channel.isConnected()) {
 			processSelector(key, session);
 		}
 	}
 
-	private void processTCPSelectionKey(SelectionKey key) throws IOException{
-		if(!key.isValid()){
+	private void processTCPSelectionKey(SelectionKey key) throws IOException {
+		if (!key.isValid()) {
 			Log.d(TAG,"Invalid SelectionKey for TCP");
 			return;
 		}
 		SocketChannel channel = (SocketChannel)key.channel();
 		Session session = SessionManager.INSTANCE.getSessionByChannel(channel);
-		if(session == null){
+		if (session == null) {
 			return;
 		}
-		
-		if(!session.isConnected() && key.isConnectable()){
+
+		if (!session.isConnected() && key.isConnectable()) {
 			String ips = PacketUtil.intToIPAddress(session.getDestIp());
 			int port = session.getDestPort();
 			SocketAddress address = new InetSocketAddress(ips, port);
 			Log.d(TAG,"connecting to remote tcp server: " + ips + ":" + port);
 			boolean connected = false;
-			if(!channel.isConnected() && !channel.isConnectionPending()){
-				try{
+			if (!channel.isConnected() && !channel.isConnectionPending()) {
+				try {
 					connected = channel.connect(address);
-				} catch (ClosedChannelException | UnresolvedAddressException |
-						UnsupportedAddressTypeException | SecurityException e) {
-					Log.e(TAG, e.toString());
-					session.setAbortingConnection(true);
-				} catch (IOException e) {
+				} catch (UnresolvedAddressException | UnsupportedAddressTypeException | SecurityException | IOException e) {
 					Log.e(TAG, e.toString());
 					session.setAbortingConnection(true);
 				}
-			}
-			
+            }
+
 			if (connected) {
 				session.setConnected(connected);
 				Log.d(TAG,"connected immediately to remote tcp server: "+ips+":"+port);
-			} else {
-				if(channel.isConnectionPending()){
-					connected = channel.finishConnect();
-					session.setConnected(connected);
-					Log.d(TAG,"connected to remote tcp server: "+ips+":"+port);
-				}
+			} else if (channel.isConnectionPending()) {
+				connected = channel.finishConnect();
+				session.setConnected(connected);
+				Log.d(TAG,"connected to remote tcp server: "+ips+":"+port);
 			}
 		}
-		if(channel.isConnected()){
+
+		if (channel.isConnected()) {
 			processSelector(key, session);
 		}
 	}
 
 	private void processSelector(SelectionKey selectionKey, Session session){
-		String sessionKey = SessionManager.INSTANCE.createKey(session.getDestIp(),
-				session.getDestPort(), session.getSourceIp(),
-				session.getSourcePort());
+		String sessionKey = SessionManager.INSTANCE.createKey(
+			session.getDestIp(), session.getDestPort(),
+			session.getSourceIp(), session.getSourcePort()
+		);
 		//tcp has PSH flag when data is ready for sending, UDP does not have this
-		if(selectionKey.isValid() && selectionKey.isWritable()
-				&& !session.isBusywrite() && session.hasDataToSend()
-				&& session.isDataForSendingReady())
-		{
+		if (!selectionKey.isValid()) return;
+		Runnable worker;
+		if (
+			selectionKey.isWritable() && !session.isBusywrite() &&
+			session.hasDataToSend() && session.isDataForSendingReady()
+		) {
 			session.setBusywrite(true);
-			final SocketDataWriterWorker worker =
-					new SocketDataWriterWorker(writer, sessionKey);
-			workerPool.execute(worker);
-		}
-		if(selectionKey.isValid() && selectionKey.isReadable()
-				&& !session.isBusyRead())
-		{
+			worker = new SocketDataWriterWorker(writer, sessionKey);
+
+		} else if (selectionKey.isReadable() && !session.isBusyRead()) {
 			session.setBusyread(true);
-			final SocketDataReaderWorker worker =
-					new SocketDataReaderWorker(writer, sessionKey);
-			workerPool.execute(worker);
-		}
+			worker = new SocketDataReaderWorker(writer, sessionKey);
+		} else { return; }
+		workerPool.execute(worker);
 	}
 }

@@ -18,64 +18,68 @@ package pro.jaewon.hammer;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.net.VpnService;
-import android.os.Build;
 import android.os.Bundle;
-import android.widget.CompoundButton;
-import android.widget.Switch;
+import android.os.Process;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-public class MainActivity extends AppCompatActivity {
-	Switch mProxyStart;
-	private static final int VPN_REQUEST_CODE = 0x0F;
+public class MainActivity extends AppCompatActivity implements ActivityResultCallback<ActivityResult>{
+	private ActivityResultLauncher<Intent> startActivityIntent;
+	private SwitchCompat mProxyStart;
 
-	/*
-        private boolean waitingForVPNStart;
-        private BroadcastReceiver vpnStateReceiver = new BroadcastReceiver()
-        {
-            @Override
-            public void onReceive(Context context, Intent intent)
-            {
-                if (LocalVPNService.BROADCAST_VPN_STATE.equals(intent.getAction()))
-                {
-                    if (intent.getBooleanExtra("running", false))
-                        waitingForVPNStart = false;
-                }
-            }
-        };*/
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		mProxyStart = (Switch) findViewById(R.id.startProxy);
+		mProxyStart = findViewById(R.id.startProxy);
 
+		startActivityIntent = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), this);
 
-		if(isVpnRunning()){
+		if (isVpnRunning()) {
 			mProxyStart.setChecked(true);
 		}
-		mProxyStart.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-			@Override
-			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-				if(isChecked) {
-					startVPN();
-				} else{
-					stopVPN();
-				}
-			}
-		});
-
-        /*waitingForVPNStart = false;
-        LocalBroadcastManager.getInstance(this).registerReceiver(vpnStateReceiver,
-                new IntentFilter(LocalVPNService.BROADCAST_VPN_STATE));*/
+		mProxyStart.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) startVPN();
+			else stopVPN();
+        });
 	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		mProxyStart.setChecked(isVpnRunning());
+	}
+
+	@Override
+	public void onActivityResult(ActivityResult result) {
+		int resultCode = result.getResultCode();
+		if (resultCode == RESULT_OK) {
+			startVPN();
+		}
+	}
+
 	private void startVPN() {
 		Intent vpnIntent = VpnService.prepare(this);
-		if (vpnIntent != null)
-			startActivityForResult(vpnIntent, VPN_REQUEST_CODE); //Prepare to establish a VPN connection. This method returns null if the VPN application is already prepared or if the user has previously consented to the VPN application. Otherwise, it returns an Intent to a system activity.
-		else
-			onActivityResult(VPN_REQUEST_CODE, RESULT_OK, null);
+
+		if (vpnIntent != null) {
+			//Prepare to establish a VPN connection.
+			// This method returns null if the VPN application is already prepared or if the user has previously consented to the VPN application.
+			// Otherwise, it returns an Intent to a system activity.
+			startActivityIntent.launch(vpnIntent);
+			return;
+		}
+		Intent intent = new Intent(getApplicationContext(), HammerVPNService.class);
+		// waitingForVPNStart = true;
+		startService(intent);
 	}
 	private void stopVPN() {
 		Intent intent = new Intent("stop_kill");
@@ -83,35 +87,14 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 
-	@Override
-	protected void onResume() {
-		super.onResume();
-
-		if(isVpnRunning()){
-			mProxyStart.setChecked(true);
-		} else {
-			mProxyStart.setChecked(false);
-
-		}
-	}
-
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (requestCode == VPN_REQUEST_CODE && resultCode == RESULT_OK) {
-			Intent intent = new Intent(this, DawnVPNService.class);
-
-			// waitingForVPNStart = true;
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-				//startForegroundService(intent);
-				startService(intent);
-			} else {
-				startService(intent);
-			}
-		}
-	}
-
 	private boolean isVpnRunning() {
 		ConnectivityManager cm = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
-		return cm.getNetworkInfo(ConnectivityManager.TYPE_VPN).isConnectedOrConnecting();
+		Network[] networks = cm.getAllNetworks();
+		for (Network n : networks) {
+			NetworkCapabilities c = cm.getNetworkCapabilities(n);
+			if (c == null || !c.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) continue;
+			if (c.getOwnerUid() == Process.myUid()) return true;
+		}
+		return false;
 	}
-
 }

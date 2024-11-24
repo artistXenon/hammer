@@ -28,20 +28,9 @@ public class SessionManagerTest {
     @Before
     public void setUp() throws Exception {
         IProtectSocket protectSocket = new IProtectSocket() {
-            @Override
-            public void protectSocket(Socket socket) {
-
-            }
-
-            @Override
-            public void protectSocket(int socket) {
-
-            }
-
-            @Override
-            public void protectSocket(DatagramSocket socket) {
-
-            }
+            @Override public boolean protect(Socket socket) { return false; }
+            @Override public boolean protect(int socket) { return false; }
+            @Override public boolean protect(DatagramSocket socket) { return false; }
         };
         SocketProtector.getInstance().setProtector(protectSocket);
     }

@@ -37,13 +37,14 @@ public class IPPacketFactory {
 	@NonNull
 	public static IPv4Header copyIPv4Header(@NonNull IPv4Header iPv4Header) {
 		return new IPv4Header(iPv4Header.getIpVersion(),
-				iPv4Header.getInternetHeaderLength(),
-				iPv4Header.getDscpOrTypeOfService(), iPv4Header.getEcn(),
-				iPv4Header.getTotalLength(), iPv4Header.getIdentification(),
-				iPv4Header.isMayFragment(), iPv4Header.isLastFragment(),
-				iPv4Header.getFragmentOffset(), iPv4Header.getTimeToLive(),
-				iPv4Header.getProtocol(), iPv4Header.getHeaderChecksum(),
-				iPv4Header.getSourceIP(), iPv4Header.getDestinationIP());
+			iPv4Header.getInternetHeaderLength(),
+			iPv4Header.getDscpOrTypeOfService(), iPv4Header.getEcn(),
+			iPv4Header.getTotalLength(), iPv4Header.getIdentification(),
+			iPv4Header.isMayFragment(), iPv4Header.isLastFragment(),
+			iPv4Header.getFragmentOffset(), iPv4Header.getTimeToLive(),
+			iPv4Header.getProtocol(), iPv4Header.getHeaderChecksum(),
+			iPv4Header.getSourceIP(), iPv4Header.getDestinationIP()
+		);
 	}
 
 	/**
@@ -54,20 +55,20 @@ public class IPPacketFactory {
 	public static byte[] createIPv4HeaderData(@NonNull IPv4Header header){
 		final byte[] buffer = new byte[header.getIPHeaderLength()];
 
-		buffer[0] = (byte)((header.getInternetHeaderLength() & 0xF) | 0x40);
+		buffer[0] = (byte) ((header.getInternetHeaderLength() & 0xF) | 0x40);
 		buffer[1] = (byte) ((header.getDscpOrTypeOfService() << 2) & (header.getEcn() & 0xFF));
-		buffer[2] = (byte)(header.getTotalLength() >> 8);
-		buffer[3] = (byte)header.getTotalLength();
-		buffer[4] = (byte)(header.getIdentification() >> 8);
-		buffer[5] = (byte)header.getIdentification();
+		buffer[2] = (byte) (header.getTotalLength() >> 8);
+		buffer[3] = (byte) header.getTotalLength();
+		buffer[4] = (byte) (header.getIdentification() >> 8);
+		buffer[5] = (byte) header.getIdentification();
 
 		//combine flags and partial fragment offset
-		buffer[6] = (byte)(((header.getFragmentOffset() >> 8) & 0x1F) | header.getFlag());
-		buffer[7] = (byte)header.getFragmentOffset();
+		buffer[6] = (byte) (((header.getFragmentOffset() >> 8) & 0x1F) | header.getFlag());
+		buffer[7] = (byte) header.getFragmentOffset();
 		buffer[8] = header.getTimeToLive();
 		buffer[9]= header.getProtocol();
 		buffer[10] = (byte) (header.getHeaderChecksum() >> 8);
-		buffer[11] = (byte)header.getHeaderChecksum();
+		buffer[11] = (byte) header.getHeaderChecksum();
 
 		final ByteBuffer buf = ByteBuffer.allocate(8);
 

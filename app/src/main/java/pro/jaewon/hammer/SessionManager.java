@@ -156,12 +156,9 @@ public enum SessionManager {
 
 		if(session != null){
 			final AbstractSelectableChannel channel = session.getChannel();
-			try {
-				if (channel != null) {
-					channel.close();
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
+			if (channel != null) {
+				try { channel.close(); }
+				catch (IOException ignore) {}
 			}
 			Log.d(TAG,"closed session -> " + key);
 		}
@@ -199,7 +196,6 @@ public enum SessionManager {
 			channel = DatagramChannel.open();
 			channel.socket().setSoTimeout(0);
 			channel.configureBlocking(false);
-
 		} catch (IOException e) {
 			e.printStackTrace();
 			return null;
@@ -245,15 +241,12 @@ public enum SessionManager {
 		session.setChannel(channel);
 
 		if (table.containsKey(keys)) {
-			try {
-				channel.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-				return null;
-			}
-		} else {
-			table.put(keys, session);
+			try { channel.close(); }
+			catch (IOException ignore) {}
+			return null;
 		}
+
+		table.put(keys, session);
 		Log.d(TAG,"new UDP session successfully created.");
 		return session;
 	}
@@ -276,9 +269,6 @@ public enum SessionManager {
 			channel.socket().setSoTimeout(0);
 			channel.socket().setReceiveBufferSize(DataConst.MAX_RECEIVE_BUFFER_SIZE);
 			channel.configureBlocking(false);
-		}catch(SocketException e){
-			Log.e(TAG, e.toString());
-			return null;
 		} catch (IOException e) {
 			Log.e(TAG,"Failed to create SocketChannel: "+ e.getMessage());
 			return null;
@@ -294,9 +284,9 @@ public enum SessionManager {
 		SocketAddress socketAddress = new InetSocketAddress(ips, port);
 		Log.d(TAG,"initiate connecting to remote tcp server: " + ips + ":" + port);
 		boolean connected;
-		try{
+		try {
 			connected = channel.connect(socketAddress);
-		} catch(IOException e) {
+		} catch (IOException e) {
 			Log.e(TAG, e.toString());
 			return null;
 		}
@@ -324,15 +314,11 @@ public enum SessionManager {
 		session.setChannel(channel);
 
 		if (table.containsKey(key)) {
-			try {
-				channel.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			try { channel.close(); }
+			catch (IOException ignore) {}
 			return null;
-		} else {
-			table.put(key, session);
 		}
+		table.put(key, session);
 		return session;
 	}
 	/**

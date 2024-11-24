@@ -7,12 +7,13 @@
     android:layout_margin="10dp"
     android:gravity="center">
 
-    <Switch android:id="@+id/startProxy"
-        android:layout_centerHorizontal="true"
-        android:layout_width="wrap_content"
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/startProxy"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="밝히기"
-        android:textOff="off"
-        android:textOn="on"/>
+        android:text="@string/switch_title"
+        android:textOff="@string/off"
+        android:textOn="@string/on" />
+
 
 </LinearLayout>

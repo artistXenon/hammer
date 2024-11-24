@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "pro.jaewon.hammer"
-        minSdkVersion 24
+        minSdkVersion 30
         //noinspection EditedTargetSdkVersion
         targetSdkVersion 35
         versionCode 1

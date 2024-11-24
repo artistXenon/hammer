@@ -14,4 +14,7 @@
     <string name="info">Info</string>
     <string name="no_network_information">No active network connection on your device, please connect to a network and try again.</string>
     <string name="title_activity_detail">DetailActivity</string>
+    <string name="off">off</string>
+    <string name="on">on</string>
+    <string name="switch_title">smash</string>
 </resources>

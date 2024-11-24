@@ -16,6 +16,8 @@
 
 package pro.jaewon.hammer.socket;
 
+import android.net.VpnService;
+
 import java.net.DatagramSocket;
 import java.net.Socket;
 
@@ -46,17 +48,15 @@ public class SocketProtector {
 	 * @param protector ProtectSocket
 	 */
 	public void setProtector(IProtectSocket protector){
-		if(this.protector == null){
-			this.protector = protector;
-		}
+		this.protector = protector;
 	}
-	public void protect(Socket socket){
-		protector.protectSocket(socket);
+	public void protect(Socket socket) {
+		protector.protect(socket);
 	}
 	public void protect(int socket){
-		protector.protectSocket(socket);
+		protector.protect(socket);
 	}
 	public void protect(DatagramSocket socket){
-		protector.protectSocket(socket);
+		protector.protect(socket);
 	}
 }

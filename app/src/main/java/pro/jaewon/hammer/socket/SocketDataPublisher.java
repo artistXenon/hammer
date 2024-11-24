@@ -25,6 +25,7 @@ import android.util.Log;
  * @author Borey Sao
  * Date: June 15, 2014
  */
+//==================== NOT IN USE
 public class SocketDataPublisher implements Runnable {
 	private static final String TAG = "SocketDataPublisher";
 	private List<IReceivePacket> subscribers;
@@ -50,18 +51,15 @@ public class SocketDataPublisher implements Runnable {
 	public void run() {
 		Log.d(TAG,"BackgroundWriter starting...");
 		
-		while(!isShuttingDown()) {
+		while (!isShuttingDown()) {
 			byte[] packetData = data.getData();
-			if(packetData != null) {
+			if (packetData != null) {
 				for(IReceivePacket subscriber: subscribers){
 					subscriber.receive(packetData);
 				}
 			} else {
-				try {
-					Thread.sleep(100);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+				try { Thread.sleep(100); }
+				catch (InterruptedException ignore) {}
 			}
 		}
 		Log.d(TAG,"BackgroundWriter ended");
