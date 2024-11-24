@@ -16,7 +16,7 @@
 
 package pro.jaewon.hammer.network.ip;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import pro.jaewon.hammer.transport.tcp.PacketHeaderException;
 

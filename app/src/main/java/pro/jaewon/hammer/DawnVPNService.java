@@ -24,9 +24,10 @@ import android.net.VpnService;
 import android.os.Handler;
 import android.os.Message;
 import android.os.ParcelFileDescriptor;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
+
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import pro.jaewon.hammer.socket.IProtectSocket;
 import pro.jaewon.hammer.socket.SocketNIODataService;

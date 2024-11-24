@@ -15,7 +15,7 @@
 */
 package pro.jaewon.hammer.transport.tcp;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import pro.jaewon.hammer.transport.ITransportHeader;
 /**
@@ -42,7 +42,8 @@ public class TCPHeader implements ITransportHeader{
 	private int windowSize;
 	private int checksum;
 	private int urgentPointer;
-	@Nullable private byte[] options;
+	@Nullable
+	private byte[] options;
 	private long ackNumber; // 32 bits
 	//vars below need to be set via setters when copy
 	private int maxSegmentSize = 0;

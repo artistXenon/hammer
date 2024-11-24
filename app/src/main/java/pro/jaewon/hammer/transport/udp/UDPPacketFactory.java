@@ -1,6 +1,6 @@
 package pro.jaewon.hammer.transport.udp;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import pro.jaewon.hammer.Packet;
 import pro.jaewon.hammer.PacketManager;

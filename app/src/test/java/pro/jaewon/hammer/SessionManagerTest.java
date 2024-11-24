@@ -1,6 +1,6 @@
 package pro.jaewon.hammer;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import pro.jaewon.hammer.socket.IProtectSocket;
 import pro.jaewon.hammer.socket.SocketProtector;

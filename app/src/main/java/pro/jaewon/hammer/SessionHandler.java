@@ -30,7 +30,7 @@ import pro.jaewon.hammer.transport.udp.UDPHeader;
 import pro.jaewon.hammer.transport.udp.UDPPacketFactory;
 import pro.jaewon.hammer.util.PacketUtil;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 
 /**

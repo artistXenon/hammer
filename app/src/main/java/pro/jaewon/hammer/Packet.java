@@ -16,7 +16,7 @@
 
 package pro.jaewon.hammer;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import pro.jaewon.hammer.network.ip.IPv4Header;
 import pro.jaewon.hammer.transport.ITransportHeader;
@@ -29,7 +29,8 @@ import pro.jaewon.hammer.transport.udp.UDPHeader;
  * Date: May 27, 2014
  */
 public class Packet {
-	@NonNull private final IPv4Header ipHeader;
+	@NonNull
+	private final IPv4Header ipHeader;
 	@NonNull private final ITransportHeader transportHeader;
 	@NonNull private final byte[] buffer;
 
